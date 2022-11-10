@@ -40,4 +40,4 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: report coverage
-        uses: k1Low/octocov-action@v1
+        uses: k1Low/octocov-action@v0
