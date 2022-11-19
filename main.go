@@ -12,11 +12,25 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"todo_app/config"
 
 	"golang.org/x/sync/errgroup"
 )
 
-func run(ctx context.Context, l net.Listener) error {
+func run(ctx context.Context) error {
+	cfg, err := config.New()
+	if err != nil {
+		return err
+	}
+
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
+	if err != nil {
+		log.Fatalf("failed to listen port %d: %v", cfg.Port, err)
+	}
+
+	url := fmt.Sprintf("http://%s", l.Addr().String())
+	log.Printf("server is running on %s", url)
+
 	s := &http.Server{
 		// 引数で受け取ったnet.Listnerをりようするので、
 		// Addrフィールドは指定しない
@@ -47,16 +61,7 @@ func run(ctx context.Context, l net.Listener) error {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Println("need port number")
-		os.Exit(1)
-	}
-	p := os.Args[1]
-	l, err := net.Listen("tcp", ":"+p)
-	if err != nil {
-		log.Fatalf("failed to listen port %s: %v", p, err)
-	}
-	if err := run(context.Background(), l); err != nil {
+	if err := run(context.Background()); err != nil {
 		fmt.Printf("faile to terminate server: %v", err)
 		os.Exit(1)
 	}
