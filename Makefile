@@ -2,7 +2,7 @@
 .DEFAULT_GOAL := help
 
 deploy: ## Deploy
-	go run . 18000
+	go run .
 
 test: ## Execute tests
 	go test -race -shuffle=on ./...
