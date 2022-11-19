@@ -19,12 +19,3 @@ type Task struct {
 }
 
 type Tasks []*Task
-
-func main() {
-	var id int64 = 1
-	_ = Task{ID: TaskID(id)}
-	// build error
-	//_ = Task{ID: id}
-
-	_ = Task{ID: 1}
-}
