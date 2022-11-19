@@ -41,5 +41,7 @@ func (s *Server) Run(ctx context.Context) error {
 	if err := s.srv.Shutdown(context.Background()); err != nil {
 		log.Printf("failed to shutdown: %+v", err)
 	}
+
+	// wait graceful shutdown
 	return eg.Wait()
 }
