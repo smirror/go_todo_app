@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -43,4 +44,14 @@ func AssertJsonString(t *testing.T, want, got *http.Response, status int, body [
 		return
 	}
 	AssertJson(t, body, gb)
+}
+
+func LoodFile(t *testing.T, path string) []byte {
+	t.Helper()
+
+	bt, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read file: %v", err)
+	}
+	return bt
 }
