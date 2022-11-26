@@ -12,12 +12,16 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type Repository struct {
+	Clocker clock.Clocker
+}
+
 type Beginner interface {
-	BeginTx(ctx context.Context, query string) (*sql.Tx, error)
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
 }
 
 type Preparer interface {
-	PrepareContext(ctx context.Context, query string) (*sqlx.Stmt, error)
+	PreparexContext(ctx context.Context, query string) (*sqlx.Stmt, error)
 }
 
 type Execer interface {
@@ -27,24 +31,20 @@ type Execer interface {
 
 type Queryer interface {
 	Preparer
-	QueryContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...any) *sqlx.Row
-	GetContext(ctx context.Context, dest any, query string, args ...any) error
-	SelectContext(ctx context.Context, dest any, query string, args ...any) error
+	QueryxContext(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
+	QueryRowxContext(ctx context.Context, query string, args ...any) *sqlx.Row
+	GetContext(ctx context.Context, dest interface{}, query string, args ...any) error
+	SelectContext(ctx context.Context, dest interface{}, query string, args ...any) error
 }
 
 var (
-	// インターフェイスが期待どおりに宣言されているかの確認
+	// インターフェースが期待通りに宣言されているか確認
 	_ Beginner = (*sqlx.DB)(nil)
 	_ Preparer = (*sqlx.DB)(nil)
 	_ Queryer  = (*sqlx.DB)(nil)
 	_ Execer   = (*sqlx.DB)(nil)
 	_ Execer   = (*sqlx.Tx)(nil)
 )
-
-type Repository struct {
-	Clocker clock.Clocker
-}
 
 func New(ctx context.Context, cfg *config.Config) (*sqlx.DB, func(), error) {
 	// sqlx.Connectを使うと内部でpingする。
