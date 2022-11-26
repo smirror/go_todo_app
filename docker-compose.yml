@@ -23,7 +23,7 @@ services:
     platform: linux/amd64
     container_name: todo-db
     environment:
-      MSQL_ARROW_EMPTY_PASSWORD: "yes"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_USER: todo
       MYSQL_PASSWORD: todo
       MYSQL_DATABASE: todo
@@ -33,4 +33,4 @@ services:
     ports:
       - "33306:3306"
 volumes:
-    todo-db-data:
+  todo-db-data:
