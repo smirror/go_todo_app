@@ -11,7 +11,7 @@ import (
 
 type AddTask struct {
 	DB        *sqlx.DB
-	Repo      *store.Repository
+	Repo      store.Repository
 	Validator *validator.Validate
 }
 
@@ -21,15 +21,13 @@ func (at *AddTask) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Title string `json:"title" validate:"required"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
-		ResponsedJSON(ctx, w, ErrResponse{
+		ResponsedJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),
 		}, http.StatusInternalServerError)
 		return
 	}
-
-	err := at.Validator.Struct(b)
-	if err != nil {
-		ResponsedJSON(ctx, w, ErrResponse{
+	if err := at.Validator.Struct(b); err != nil {
+		ResponsedJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),
 		}, http.StatusBadRequest)
 		return
@@ -39,9 +37,9 @@ func (at *AddTask) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Title:  b.Title,
 		Status: entity.TaskStatusTodo,
 	}
-	err = at.Repo.AddTask(ctx, at.DB, t)
+	err := at.Repo.AddTask(ctx, at.DB, t)
 	if err != nil {
-		ResponsedJSON(ctx, w, ErrResponse{
+		ResponsedJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),
 		}, http.StatusInternalServerError)
 		return
