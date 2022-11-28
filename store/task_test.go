@@ -34,7 +34,8 @@ func TestRepository_ListTasks(t *testing.T) {
 func prepareTasks(ctx context.Context, t *testing.T, con Execer) entity.Tasks {
 	t.Helper()
 	// 一度に綺麗にしておく
-	if _, err := con.ExecContext(ctx, "DELETE FROM task;"); err != nil {
+	if //goland:noinspection ALL
+	_, err := con.ExecContext(ctx, "DELETE FROM task;"); err != nil {
 		t.Fatalf("failed to delete all tasks: %v", err)
 	}
 	c := clock.FixedClocker{}
@@ -53,6 +54,7 @@ func prepareTasks(ctx context.Context, t *testing.T, con Execer) entity.Tasks {
 		},
 	}
 
+	//goland:noinspection SqlResolve
 	result, err := con.ExecContext(ctx,
 		"INSERT INTO task (title, status, created, modified) VALUES (?,?,?,?);",
 		wants[0].Title, wants[0].Status, wants[0].Created, wants[0].Modified,
