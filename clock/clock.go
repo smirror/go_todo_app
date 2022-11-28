@@ -12,8 +12,8 @@ func (c *RealClock) Now() time.Time {
 	return time.Now()
 }
 
-type FakeClock struct{}
+type FixedClocker struct{}
 
-func (c *FakeClock) Now() time.Time {
+func (c *FixedClocker) Now() time.Time {
 	return time.Date(2022, 9, 23, 0, 0, 0, 0, time.UTC)
 }
