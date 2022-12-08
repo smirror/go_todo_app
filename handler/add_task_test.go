@@ -2,17 +2,17 @@ package handler
 
 import (
 	"bytes"
-	"github.com/go-playground/validator/v10"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/go-playground/validator/v10"
 	"todo_app/entity"
 	"todo_app/store"
 	"todo_app/testutil"
 )
 
 func TestAddTask(t *testing.T) {
-	t.Parallel()
 	type want struct {
 		status  int
 		rspFile string
@@ -36,16 +36,16 @@ func TestAddTask(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for n, tt := range tests {
 		tt := tt
-		t.Run(name, func(t *testing.T) {
+		t.Run(n, func(t *testing.T) {
 			t.Parallel()
 
 			w := httptest.NewRecorder()
 			r := httptest.NewRequest(
 				http.MethodPost,
 				"/tasks",
-				bytes.NewReader(testutil.LoodFile(t, tt.reqFile)),
+				bytes.NewReader(testutil.LoadFile(t, tt.reqFile)),
 			)
 
 			sut := AddTask{
@@ -57,7 +57,9 @@ func TestAddTask(t *testing.T) {
 			sut.ServeHTTP(w, r)
 
 			resp := w.Result()
-			testutil.AssertResponse(t, resp, tt.want.status, testutil.LoodFile(t, tt.want.rspFile))
+			testutil.AssertResponse(t,
+				resp, tt.want.status, testutil.LoadFile(t, tt.want.rspFile),
+			)
 		})
 	}
 }

@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"time"
-	"todo_app/clock"
-	"todo_app/config"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+	"todo_app/clock"
+	"todo_app/config"
 )
 
 const (

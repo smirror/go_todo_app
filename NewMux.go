@@ -22,7 +22,7 @@ func NewMux(ctx context.Context, cfg *config.Config) (http.Handler, func(), erro
 	if err != nil {
 		return nil, nil, err
 	}
-	r := store.Repository{Clocker: clock.RealClock{}}
+	r := store.Repository{Clocker: clock.RealClocker{}}
 	at := &handler.AddTask{DB: db, Repo: r, Validator: v}
 	mux.Post("/tasks", at.ServeHTTP)
 	lt := &handler.ListTask{DB: db, Repo: r}

@@ -10,22 +10,20 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func AssertJson(t *testing.T, want, got []byte) {
+func AssertJSON(t *testing.T, want, got []byte) {
 	t.Helper()
 
-	var expectedJson, actualJson any
-	if err := json.Unmarshal(want, &expectedJson); err != nil {
-		t.Fatalf("failed to unmarshal expected json: %v", err)
+	var jw, jg any
+	if err := json.Unmarshal(want, &jw); err != nil {
+		t.Fatalf("cannot unmarshal want %q: %v", want, err)
 	}
-	if err := json.Unmarshal(got, &actualJson); err != nil {
-		t.Fatalf("failed to unmarshal actual json: %v", err)
+	if err := json.Unmarshal(got, &jg); err != nil {
+		t.Fatalf("cannot unmarshal got %q: %v", got, err)
 	}
-
-	if diff := cmp.Diff(expectedJson, actualJson); diff != "" {
-		t.Errorf("json is not equal (-want +got): %s", diff)
+	if diff := cmp.Diff(jg, jw); diff != "" {
+		t.Errorf("got differs: (-got +want)\n%s", diff)
 	}
 }
-
 func AssertResponse(t *testing.T, got *http.Response, status int, body []byte) {
 	t.Helper()
 	t.Cleanup(func() { _ = got.Body.Close() })
@@ -33,25 +31,24 @@ func AssertResponse(t *testing.T, got *http.Response, status int, body []byte) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if got.StatusCode != status {
-		t.Errorf("want status %d, but got %d, body:%d", status, got.StatusCode, gb)
+		t.Fatalf("want status %d, but got %d, body: %q", status, got.StatusCode, gb)
 	}
 
 	if len(gb) == 0 && len(body) == 0 {
-		// 期待としても実態としてもレスポンスボディがないため
-		// AssertJsonの処理は不要
+		// 期待としても実体としてもレスポンスボディがないので
+		// AssertJSONを呼ぶ必要はない。
 		return
 	}
-	AssertJson(t, body, gb)
+	AssertJSON(t, body, gb)
 }
 
-func LoodFile(t *testing.T, path string) []byte {
+func LoadFile(t *testing.T, path string) []byte {
 	t.Helper()
 
 	bt, err := os.ReadFile(path)
 	if err != nil {
-		t.Fatalf("failed to read file: %v", err)
+		t.Fatalf("cannot read from %q: %v", path, err)
 	}
 	return bt
 }

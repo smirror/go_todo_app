@@ -6,14 +6,14 @@ type Clocker interface {
 	Now() time.Time
 }
 
-type RealClock struct{}
+type RealClocker struct{}
 
-func (c RealClock) Now() time.Time {
+func (c RealClocker) Now() time.Time {
 	return time.Now()
 }
 
 type FixedClocker struct{}
 
-func (c FixedClocker) Now() time.Time {
-	return time.Date(2022, 9, 23, 0, 0, 0, 0, time.UTC)
+func (fc FixedClocker) Now() time.Time {
+	return time.Date(2022, 5, 10, 12, 34, 56, 0, time.UTC)
 }

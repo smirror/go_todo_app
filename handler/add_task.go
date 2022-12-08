@@ -2,16 +2,16 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/go-playground/validator/v10"
-	"github.com/jmoiron/sqlx"
 	"net/http"
+	"time"
+
+	"github.com/go-playground/validator/v10"
 	"todo_app/entity"
 	"todo_app/store"
 )
 
 type AddTask struct {
-	DB        *sqlx.DB
-	Repo      store.Repository
+	Store     *store.TaskStore
 	Validator *validator.Validate
 }
 
@@ -21,31 +21,32 @@ func (at *AddTask) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Title string `json:"title" validate:"required"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
-		ResponsedJSON(ctx, w, &ErrResponse{
+		RespondJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),
 		}, http.StatusInternalServerError)
 		return
 	}
 	if err := at.Validator.Struct(b); err != nil {
-		ResponsedJSON(ctx, w, &ErrResponse{
+		RespondJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),
 		}, http.StatusBadRequest)
 		return
 	}
 
 	t := &entity.Task{
-		Title:  b.Title,
-		Status: entity.TaskStatusTodo,
+		Title:   b.Title,
+		Status:  entity.TaskStatusTodo,
+		Created: time.Now(),
 	}
-	err := at.Repo.AddTask(ctx, at.DB, t)
+	id, err := at.Store.Add(t)
 	if err != nil {
-		ResponsedJSON(ctx, w, &ErrResponse{
+		RespondJSON(ctx, w, &ErrResponse{
 			Message: err.Error(),
 		}, http.StatusInternalServerError)
 		return
 	}
 	rsp := struct {
 		ID entity.TaskID `json:"id"`
-	}{ID: t.ID}
-	ResponsedJSON(ctx, w, rsp, http.StatusOK)
+	}{ID: id}
+	RespondJSON(ctx, w, rsp, http.StatusOK)
 }
