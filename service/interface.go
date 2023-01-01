@@ -12,5 +12,5 @@ type TaskAdder interface {
 }
 
 type TaskLister interface {
-	ListTasks(ctx context.Context, db store.Queryer) (entity.Task, error)
+	ListTasks(ctx context.Context, db store.Queryer) (entity.Tasks, error)
 }

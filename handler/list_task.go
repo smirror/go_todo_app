@@ -7,7 +7,7 @@ import (
 )
 
 type ListTask struct {
-	Service ListTaskService
+	Service ListTasksService
 }
 
 type task struct {
