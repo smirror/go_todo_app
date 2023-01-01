@@ -16,17 +16,17 @@ func TestListTask(t *testing.T) {
 		rspFile string
 	}
 	tests := map[string]struct {
-		tasks map[entity.TaskID]*entity.Task
+		tasks *[]*entity.Task
 		want  want
 	}{
 		"ok": {
-			tasks: map[entity.TaskID]*entity.Task{
-				1: {
+			tasks: []*entity.Task{
+				{
 					ID:     1,
 					Title:  "test1",
 					Status: entity.TaskStatusTodo,
 				},
-				2: {
+				{
 					ID:     2,
 					Title:  "test2",
 					Status: entity.TaskStatusDone,
@@ -38,7 +38,7 @@ func TestListTask(t *testing.T) {
 			},
 		},
 		"empty": {
-			tasks: map[entity.TaskID]*entity.Task{},
+			tasks: []*entity.Task{},
 			want: want{
 				status:  http.StatusOK,
 				rspFile: "testdata/list_task/empty_rsp.json.golden",
