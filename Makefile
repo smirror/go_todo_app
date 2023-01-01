@@ -33,6 +33,9 @@ dry-migrate: ## Try migration
 migrate:  ## Execute migration
 	mysqldef -u todo -p todo -h 127.0.0.1 -P 33306 todo < ./_tools/mysql/schema.sql
 
+generate: ## Generate code
+	go generate ./...
+
 rmi-notused: ## Remove not used docker images
 	docker rmi $$(docker images -q)
 
