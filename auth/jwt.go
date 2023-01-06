@@ -20,7 +20,7 @@ var rawPrivKey []byte
 var rawPubKey []byte
 
 type JWTer struct {
-	PrivateKey, PublixKey jwk.Key
+	PrivateKey, PublicKey jwk.Key
 	Store                 Store
 	Clocker               clock.Clocker
 }
@@ -31,21 +31,21 @@ type Store interface {
 	Load(ctx context.Context, key string) (entity.UserID, error)
 }
 
-func NewJWTer(s Store) (*JWTer, error) {
+func NewJWTer(s Store, c clock.Clocker) (*JWTer, error) {
 	j := &JWTer{Store: s}
 	privkey, err := parse(rawPrivKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse private key: %w", err)
+		return nil, fmt.Errorf("failed in NewJWTer: private key: %w", err)
 	}
 
 	pubkey, err := parse(rawPubKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse public key: %w", err)
+		return nil, fmt.Errorf("failed in NewJWTer: public key: %w", err)
 	}
 
 	j.PrivateKey = privkey
-	j.PublixKey = pubkey
-	j.Clocker = clock.RealClocker{}
+	j.PublicKey = pubkey
+	j.Clocker = c
 	return j, nil
 }
 
@@ -65,9 +65,13 @@ const (
 
 func (j *JWTer) GenerateToken(ctx context.Context, u entity.User) ([]byte, error) {
 	tok, err := jwt.NewBuilder().
-		JwtID(uuid.New()).String().
-		Issuer("todo_app").
+		JwtID(uuid.New().String()).
+		Issuer(`github.com/budougumi0617/go_todo_app`).
 		Subject("access_token").
+		IssuedAt(j.Clocker.Now()).
+		// redisのexpireはこれを使う。
+		// https://pkg.go.dev/github.com/go-redis/redis/v8#Client.Set
+		// clock.Durationだから Subする必要がある
 		Expiration(j.Clocker.Now().Add(30*time.Minute)).
 		Claim(RoleKey, u.Role).
 		Claim(UserNameKey, u.Name).
@@ -77,7 +81,7 @@ func (j *JWTer) GenerateToken(ctx context.Context, u entity.User) ([]byte, error
 		return nil, fmt.Errorf("getToken: failed to create token builder: %w", err)
 	}
 
-	if err := jwt.Store.Save(ctx, tok.JwtID(), u.ID); err != nil {
+	if err := j.Store.Save(ctx, tok.JwtID(), u.ID); err != nil {
 		return nil, err
 	}
 
