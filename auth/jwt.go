@@ -8,6 +8,7 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"golang.org/x/net/context"
+	"net/http"
 	"time"
 	"todo_app/clock"
 	"todo_app/entity"
@@ -92,4 +93,23 @@ func (j *JWTer) GenerateToken(ctx context.Context, u entity.User) ([]byte, error
 
 	return signed, nil
 
+}
+
+func (j *JWTer) GetToken(ctx context.Context, r *http.Request) (jwt.Token, error) {
+	token, err := jwt.ParseRequest(
+		r,
+		jwt.WithKey(jwa.Ed25519, j.PublicKey),
+		jwt.WithValidate(false),
+	)
+	if err != nil {
+		return nil, err
+	}
+	if err := jwt.Validate(token, jwt.WithClock(j.Clocker)); err != nil {
+		return nil, fmt.Errorf("GetToken: failed to validate token: %w", err)
+	}
+	// Redisから削除して手動でexpireさせていることもありうる。
+	if _, err := j.Store.Load(ctx, token.JwtID()); err != nil {
+		return nil, fmt.Errorf("GetToken: %q expired: %w", token.JwtID(), err)
+	}
+	return token, nil
 }
