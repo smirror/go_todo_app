@@ -2,20 +2,29 @@ package auth
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwk"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"golang.org/x/net/context"
+	"net/http"
+	"net/http/httptest"
+	"reflect"
 	"testing"
+	"time"
 	"todo_app/clock"
 	"todo_app/entity"
 	"todo_app/testutil/fixture"
 )
 
 func TestEmbedded(t *testing.T) {
-	want := []byte("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDgMsu3oTWSLZffs3yRfglFnrPIfx/aAGUE11VkqTutw smirror@LAPTOP-1NQ54DHH")
+	want := []byte("-----BEGIN PUBLIC KEY-----")
 	if !bytes.Contains(rawPubKey, want) {
 		t.Errorf("want %s, but got %s", want, rawPubKey)
 	}
 
-	want = []byte("-----BEGIN OPENSSH PRIVATE KEY-----")
+	want = []byte("-----BEGIN PRIVATE KEY-----")
 	if !bytes.Contains(rawPrivKey, want) {
 		t.Errorf("want %s, but got %s", want, rawPrivKey)
 	}
@@ -23,9 +32,9 @@ func TestEmbedded(t *testing.T) {
 
 func TestJWTer_GenerateToken(t *testing.T) {
 	ctx := context.Background()
-	moq := &StoreMock{}
 	wantID := entity.UserID(20)
 	u := fixture.User(&entity.User{ID: wantID})
+	moq := &StoreMock{}
 	moq.SaveFunc = func(ctx context.Context, key string, userID entity.UserID) error {
 		if userID != wantID {
 			t.Errorf("want %d, but got %d", wantID, userID)
@@ -40,10 +49,64 @@ func TestJWTer_GenerateToken(t *testing.T) {
 
 	got, err := sut.GenerateToken(ctx, *u)
 	if err != nil {
-		t.Fatalf("not want err:%v", err)
+		t.Fatalf("not want err: %v", err)
 	}
 
 	if len(got) == 0 {
-		t.Error("want token, but got empty")
+		t.Errorf("token is empty")
+	}
+}
+
+func TestJWTer_GetToken(t *testing.T) {
+	t.Parallel()
+
+	c := clock.FixedClocker{}
+	want, err := jwt.NewBuilder().
+		JwtID(uuid.New().String()).
+		Issuer("todo_app").
+		Subject(`access_token`).
+		IssuedAt(c.Now()).
+		Expiration(c.Now().Add(30*time.Minute)).
+		Claim(RoleKey, "test").
+		Claim(UserNameKey, "test_user").
+		Build()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pkey, err := jwk.ParseKey(rawPrivKey, jwk.WithPEM(true))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	signed, err := jwt.Sign(want, jwt.WithKey(jwa.RS256, pkey))
+	if err != nil {
+		t.Fatal(err)
+	}
+	userID := entity.UserID(20)
+
+	ctx := context.Background()
+	moq := &StoreMock{}
+	moq.LoadFunc = func(ctx context.Context, key string) (entity.UserID, error) {
+		return userID, nil
+	}
+	sut, err := NewJWTer(moq, c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(
+		http.MethodGet,
+		`https://github.com/smirror`,
+		nil,
+	)
+	req.Header.Set(`Authorization`, fmt.Sprintf(`Bearer %s`, signed))
+	got, err := sut.GetToken(ctx, req)
+	if err != nil {
+		t.Fatalf("want no error, but got %v", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("GetToken() got = %v, want %v", got, want)
 	}
 }

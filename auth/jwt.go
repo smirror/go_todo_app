@@ -50,10 +50,10 @@ func NewJWTer(s Store, c clock.Clocker) (*JWTer, error) {
 	return j, nil
 }
 
-func parse(rawkey []byte) (jwk.Key, error) {
-	key, err := jwk.ParseKey(rawkey)
+func parse(rawKey []byte) (jwk.Key, error) {
+	key, err := jwk.ParseKey(rawKey, jwk.WithPEM(true))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse key: %w", err)
+		return nil, err
 	}
 
 	return key, nil
@@ -86,7 +86,7 @@ func (j *JWTer) GenerateToken(ctx context.Context, u entity.User) ([]byte, error
 		return nil, err
 	}
 
-	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.Ed25519, j.PrivateKey))
+	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.RS256, j.PrivateKey))
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (j *JWTer) GenerateToken(ctx context.Context, u entity.User) ([]byte, error
 func (j *JWTer) GetToken(ctx context.Context, r *http.Request) (jwt.Token, error) {
 	token, err := jwt.ParseRequest(
 		r,
-		jwt.WithKey(jwa.Ed25519, j.PublicKey),
+		jwt.WithKey(jwa.RS256, j.PublicKey),
 		jwt.WithValidate(false),
 	)
 	if err != nil {
