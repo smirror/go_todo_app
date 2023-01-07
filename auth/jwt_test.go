@@ -15,6 +15,7 @@ import (
 	"time"
 	"todo_app/clock"
 	"todo_app/entity"
+	"todo_app/store"
 	"todo_app/testutil/fixture"
 )
 
@@ -108,5 +109,92 @@ func TestJWTer_GetToken(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("GetToken() got = %v, want %v", got, want)
+	}
+}
+
+type FixedTomorrowClocker struct{}
+
+func (FixedTomorrowClocker) Now() time.Time {
+	return time.Now().Add(24 * time.Hour)
+}
+
+func TestJWTer_GetToken_NG(t *testing.T) {
+	t.Parallel()
+	c := clock.FixedClocker{}
+	tok, err := jwt.NewBuilder().
+		JwtID(uuid.New().String()).
+		Issuer("todo_app").
+		Subject(`access_token`).
+		IssuedAt(c.Now()).
+		Expiration(c.Now().Add(30*time.Minute)).
+		Claim(RoleKey, "test").
+		Claim(UserNameKey, "test_user").
+		Build()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pkey, err := jwk.ParseKey(rawPrivKey, jwk.WithPEM(true))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.RS256, pkey))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	type moq struct {
+		userID entity.UserID
+		err    error
+	}
+	tests := map[string]struct {
+		c   clock.Clocker
+		moq moq
+	}{
+		"expire": {
+			// トークンのexpire時間より未来の時間を返す。
+			c: FixedTomorrowClocker{},
+		},
+		"notFoundInStore": {
+			c: clock.FixedClocker{},
+			moq: moq{
+				err: store.ErrNotFound,
+			},
+		},
+	}
+
+	for n, tt := range tests {
+		tt := tt
+		t.Run(n, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			moq := &StoreMock{}
+			moq.LoadFunc = func(ctx context.Context, key string) (entity.UserID, error) {
+				return tt.moq.userID, tt.moq.err
+			}
+
+			sut, err := NewJWTer(moq, tt.c)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			req := httptest.NewRequest(
+				http.MethodGet,
+				`https://github.com/smirror`,
+				nil,
+			)
+
+			req.Header.Set(`Authorization`, fmt.Sprintf(`Bearer %s`, signed))
+			got, err := sut.GetToken(ctx, req)
+			if err == nil {
+				t.Fatalf("want error, but got nil")
+			}
+			if got != nil {
+				t.Errorf("want nil, but got %v", got)
+			}
+		})
 	}
 }
