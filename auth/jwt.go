@@ -71,7 +71,7 @@ func (j *JWTer) GenerateToken(ctx context.Context, u entity.User) ([]byte, error
 		Subject("access_token").
 		IssuedAt(j.Clocker.Now()).
 		// redisのexpireはこれを使う。
-		// https://pkg.go.dev/github.com/go-redis/redis/v8#Client.Set
+		// https://pkg.go.dev/github.com/redis/go-redis/v9#Client.Set
 		// clock.Durationだから Subする必要がある
 		Expiration(j.Clocker.Now().Add(30*time.Minute)).
 		Claim(RoleKey, u.Role).
