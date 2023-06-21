@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lestrrat-go/jwx/v2 v2.0.10
-	github.com/matryer/moq v0.3.1
+	github.com/matryer/moq v0.3.2
 	github.com/redis/go-redis/v9 v9.0.5
 	golang.org/x/crypto v0.9.0
 	golang.org/x/net v0.10.0
