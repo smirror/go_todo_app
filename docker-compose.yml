@@ -1,9 +1,9 @@
-version: "3.9"
+version: "3"
 # ref: https://docs.docker.com/compose/compose-file
 services:
   app:
-    image: gotodo
     build:
+      context: .
       args:
         - target=dev
     environment:
@@ -20,9 +20,9 @@ services:
       - .:/app
     ports:
       - "18000:8080"
+
   todo-db:
     image: mysql:8.0.33
-    platform: linux/amd64
     container_name: todo-db
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
@@ -34,6 +34,7 @@ services:
       - $PWD/_tools/mysql/conf.d:/etc/mysql/conf.d:cached
     ports:
       - "33306:3306"
+
   todo-redis:
     image: redis:latest
     container_name: todo-redis
@@ -41,6 +42,7 @@ services:
       - "36379:6379"
     volumes:
       - todo-redis-data:/data
+
 volumes:
   todo-db-data:
   todo-redis-data:
