@@ -10,19 +10,19 @@ deploy: ## Deploy
 	go run .
 
 build-local: ## Build docker image to local development
-	docker compose build --no-cache
+	docker-compose build --no-cache
 
-up: ## Do docker compose up with hot reload
-	docker compose up -d
+up: ## Do docker-compose up with hot reload
+	docker-compose up -d
 
-down: ## Do docker compose down
-	docker compose down
+down: ## Do docker-compose down
+	docker-compose down
 
-logs: ## Tail docker compose logs
-	docker compose logs -f
+logs: ## Tail docker-compose logs
+	docker-compose logs -f
 
 ps: ## Check container status
-	docker compose ps
+	docker-compose ps
 
 test: ## Execute tests
 	go test -race -shuffle=on ./...
@@ -40,7 +40,7 @@ rmi-notused: ## Remove not used docker images
 	docker rmi $$(docker images -q)
 
 all-clean: ## Clean up
-	docker compose down --rmi all --volumes --remove-orphans
+	docker-compose down --rmi all --volumes --remove-orphans
 
 help: ## Show options
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
