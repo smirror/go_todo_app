@@ -1,5 +1,5 @@
 # デプロイ用コンテナに含めるバイナリを作成するコンテナ
-FROM golang:1.20.6-bullseye as deploy-builder
+FROM golang:1.21.3-bullseye as deploy-builder
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ CMD ["./app"]
 
 # ---------------------------------------------------
 # local dev
-FROM golang:1.20.6 as dev
+FROM golang:1.21.3 as dev
 WORKDIR /app
 RUN go install github.com/cosmtrek/air@latest
 CMD ["air"]

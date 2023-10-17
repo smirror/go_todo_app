@@ -50,7 +50,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: |
           go install github.com/k0kubun/sqldef/cmd/mysqldef@latest
           mysqldef -u todo -p todo -h localhost -P 3306 todo < ./_tools/mysql/schema.sql
