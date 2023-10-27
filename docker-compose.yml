@@ -22,7 +22,7 @@ services:
       - "18000:8080"
 
   todo-db:
-    image: mysql:8.1.0
+    image: mysql:8.2.0
     container_name: todo-db
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
